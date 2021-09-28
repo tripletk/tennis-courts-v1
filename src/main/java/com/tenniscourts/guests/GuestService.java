@@ -33,7 +33,7 @@ public class GuestService {
 	}
 	
 	public List<GuestDTO> findGuestByName(String guestName) {
-		return guestMapper.map(guestRepository.findByGuestName(guestName));
+		return guestMapper.map(guestRepository.findByName(guestName));
 	}
 	
 	// UPDATE

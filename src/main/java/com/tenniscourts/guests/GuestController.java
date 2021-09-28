@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tenniscourts.config.BaseRestController;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiResponse;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

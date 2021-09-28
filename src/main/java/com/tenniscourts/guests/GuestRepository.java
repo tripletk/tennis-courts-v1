@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GuestRepository extends JpaRepository<Guest, Long> {
 	
-	List<Guest> findByGuestName(String name);
+	List<Guest> findByName(String name);
 
 }
