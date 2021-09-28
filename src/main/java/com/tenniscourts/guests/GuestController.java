@@ -2,6 +2,7 @@ package com.tenniscourts.guests;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,17 +30,32 @@ public class GuestController extends BaseRestController{
 	private final GuestService guestService;
 
 	// CREATE
+	@ApiOperation(value = "Create a guest")
+	@ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Created"),
+            @ApiResponse(code = 400, message = "An unexpected error occurred")
+    })
 	@PostMapping
-	public ResponseEntity<Guest> createGuest(@RequestBody CreateGuestRequestDTO createGuestRequestDTO) {
+	public ResponseEntity<Void> createGuest(@RequestBody CreateGuestRequestDTO createGuestRequestDTO) {
 		return ResponseEntity.created(locationByEntity(guestService.createGuest(createGuestRequestDTO).getId())).build();
 	}
 	
 	// READ
+	@ApiOperation(value = "Get a guest by Id")
+	@ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Ok"),
+            @ApiResponse(code = 400, message = "An unexpected error occurred")
+    })
 	@GetMapping(path = "/{guestId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<GuestDTO> getGuestById(@PathVariable Long guestId) {
 		return ResponseEntity.ok(guestService.findGuestById(guestId));
 	}
 	
+	@ApiOperation(value = "Get guests or a guest by name url param")
+	@ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Ok"),
+            @ApiResponse(code = 400, message = "An unexpected error occurred")
+    })
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<GuestDTO>> getGuestByName(@RequestParam(name = "name", required = false) String name) {
 		if(name == null) {
@@ -50,14 +66,24 @@ public class GuestController extends BaseRestController{
 	}
 	
 	// UPDATE
+	@ApiOperation(value = "Update a guest")
+	@ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Ok"),
+            @ApiResponse(code = 400, message = "An unexpected error occurred")
+    })
 	@PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<GuestDTO> updateGuest(@RequestBody GuestDTO guestDTO) {
 		return ResponseEntity.ok(guestService.updateGuest(guestDTO));
 	}
 	
 	// DELETE
+	@ApiOperation(value = "Delete a guest")
+	@ApiResponses(value = {
+            @ApiResponse(code = 200, message = "No Content"),
+            @ApiResponse(code = 400, message = "An unexpected error occurred")
+    })
 	@DeleteMapping
-	public ResponseEntity<Void> deleteGUest(@PathVariable Long guestId) {
+	public ResponseEntity<Void> deleteGuest(@PathVariable Long guestId) {
 		guestService.deleteGuest(guestId);
 		return ResponseEntity.noContent().build();
 	}

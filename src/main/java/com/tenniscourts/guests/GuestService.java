@@ -2,6 +2,7 @@ package com.tenniscourts.guests;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.tenniscourts.exceptions.EntityNotFoundException;
@@ -12,23 +13,29 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class GuestService {
 	
-	private final GuestRepository guestRepository = null;
-	private final GuestMapper guestMapper = null;
+	private final GuestRepository guestRepository;
+	
+	private final GuestMapper guestMapper;
 
 	// CREATE
 	public GuestDTO createGuest(CreateGuestRequestDTO createGuestRequestDTO) {
-		GuestDTO guestDTO = GuestDTO.builder().name(createGuestRequestDTO.getName()).build();
-		return guestMapper.map(guestRepository.save(guestMapper.map(guestDTO)));
-	}
+        GuestDTO guestDTO = GuestDTO.builder().name(createGuestRequestDTO.getName()).build();
+        return guestMapper.map(guestRepository.save(guestMapper.map(guestDTO)));
+    }
 	
 	// READ
 	public List<GuestDTO> getAllGuests() {
-		return guestMapper.map(guestRepository.findAll());
+		try {
+			return guestMapper.map(guestRepository.findAll());
+		} catch(NullPointerException e) {
+			throw new EntityNotFoundException("No guests in repository!");
+		}
+		
 	}
 	
 	public GuestDTO findGuestById(Long guestId) {
 		return guestRepository.findById(guestId).map(guestMapper::map).orElseThrow(() -> {
-			throw new EntityNotFoundException("Guest with id " + guestId + "not found.");
+			throw new EntityNotFoundException("No guests in repository!");
 		});
 	}
 	

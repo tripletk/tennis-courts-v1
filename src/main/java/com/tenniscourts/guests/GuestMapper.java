@@ -2,14 +2,17 @@ package com.tenniscourts.guests;
 
 import java.util.List;
 
+import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
+import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
 public interface GuestMapper {
 
-	Guest map(GuestDTO source);
+    Guest map(GuestDTO source);
 
+    @InheritInverseConfiguration
     GuestDTO map(Guest source);
-    
+
     List<GuestDTO> map(List<Guest> source);
 }
