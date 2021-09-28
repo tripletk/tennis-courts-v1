@@ -1,12 +1,19 @@
 package com.tenniscourts.reservations;
 
 import com.tenniscourts.exceptions.EntityNotFoundException;
+import com.tenniscourts.schedules.Schedule;
+import com.tenniscourts.schedules.ScheduleRepository;
+
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+
+import javax.transaction.Transactional;
+
+import static com.tenniscourts.reservations.ReservationStatus.*;
 
 @Service
 @AllArgsConstructor
@@ -15,6 +22,8 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
 
     private final ReservationMapper reservationMapper;
+    
+    private final ScheduleRepository scheduleRepository;
 
     public ReservationDTO bookReservation(CreateReservationRequestDTO createReservationRequestDTO) {
         throw new UnsupportedOperationException();
@@ -73,21 +82,48 @@ public class ReservationService {
 
     /*TODO: This method actually not fully working, find a way to fix the issue when it's throwing the error:
             "Cannot reschedule to the same slot.*/
+    @Transactional
     public ReservationDTO rescheduleReservation(Long previousReservationId, Long scheduleId) {
-        Reservation previousReservation = cancel(previousReservationId);
-
-        if (scheduleId.equals(previousReservation.getSchedule().getId())) {
+    	
+    	// Check if reservation exists.
+    	Reservation previousReservation = reservationRepository.findById(previousReservationId).orElseThrow(()->{
+            throw new EntityNotFoundException("Reservation not found.");
+        });
+    	
+    	// Check if scheduleId is in database
+        Schedule newSchedule = scheduleRepository.findById(scheduleId).orElseThrow(()->{
+        	throw new EntityNotFoundException("New Schedule not found.");
+        });
+    	
+    	// Check if it is in READY_TO_PLAY status
+    	if(!READY_TO_PLAY.equals(previousReservation.getReservationStatus())){
+            throw new IllegalArgumentException("Reservations with status READY_TO_PLAY can only be rescheduled");
+        }
+    	
+        //  Check if the user is trying to schedule to the same timeslot in same court
+        if (newSchedule.getStartDateTime().equals(previousReservation.getSchedule().getStartDateTime())
+                && newSchedule.getTennisCourt().getId().equals(previousReservation.getSchedule().getTennisCourt().getId())) {
             throw new IllegalArgumentException("Cannot reschedule to the same slot.");
         }
+        
+        // Check if the reservation still can be modified
+        validateCancellation(previousReservation);
 
-        previousReservation.setReservationStatus(ReservationStatus.RESCHEDULED);
-        reservationRepository.save(previousReservation);
+        // Calculate refund value
+        BigDecimal refund = getRefundValue(previousReservation);
+        
+        // Update the reservation as Rescheduled
+        previousReservation = updateReservation(previousReservation, refund, ReservationStatus.RESCHEDULED);
 
+        // Book a new reservation
         ReservationDTO newReservation = bookReservation(CreateReservationRequestDTO.builder()
                 .guestId(previousReservation.getGuest().getId())
                 .scheduleId(scheduleId)
                 .build());
+        
+        // Record the old reservation
         newReservation.setPreviousReservation(reservationMapper.map(previousReservation));
+        
         return newReservation;
     }
 }
